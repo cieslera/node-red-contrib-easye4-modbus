@@ -1,0 +1,431 @@
+<!-- easyE4 über Modbus TCP / easyE4 via Modbus TCP
+     Texte: locales/<sprache>/easye4mb.json, Hilfe: locales/<sprache>/easye4mb.html (de, en-US) -->
+
+<!-- ===================== gemeinsame Hilfsfunktionen / shared editor helpers ===================== -->
+<script type="text/javascript">
+    (function () {
+        function val(id, node, key) {
+            var $e = $(id);
+            return $e.length ? $e.val() : node[key];
+        }
+        function intOk(v, min, max) {
+            var s = String(v === undefined || v === null ? "" : v).trim();
+            if (!/^\d+$/.test(s)) return false;
+            var n = parseInt(s, 10);
+            return n >= min && n <= max;
+        }
+        // Höchstindex je Firmware (wie lib/easye4mb-map.js)
+        function maxIndex(t, fw) {
+            var hi = fw === "240";
+            var m = { I: 128, Q: 128, ID: 96, N: 512, NB: 64, NW: 32, ND: 16,
+                M: hi ? 1024 : 512, MB: hi ? 2044 : 1024, MW: hi ? 1022 : 512, MD: hi ? 511 : 256,
+                IA: hi ? 512 : 48, QA: hi ? 128 : 48 };
+            return m[t] || 0;
+        }
+        function mwReg(n) { return n <= 512 ? 1000 + n : 46000 + n; }
+        // Register-Anzeige für einen Operanden, z. B. "FC3 · Reg. 1003"
+        function regText(t, n, fw) {
+            n = parseInt(n, 10);
+            if (!(n >= 1)) return "?";
+            switch (t) {
+                case "I": return "FC2 · " + n;
+                case "Q": return "FC1 · " + n;
+                case "ID": return "FC2 · " + (3000 + n);
+                case "M": return "FC1 · " + (n <= 512 ? 1000 + n : 56000 + n);
+                case "N": return "FC1 · " + (2000 + n);
+                case "MW": return "FC3 · " + mwReg(n);
+                case "NW": return "FC3 · " + (2000 + n);
+                case "MB": return "FC3 · " + mwReg(Math.ceil(n / 2)) + (n % 2 ? " (Low-Byte)" : " (High-Byte)");
+                case "NB": return "FC3 · " + (2000 + Math.ceil(n / 2)) + (n % 2 ? " (Low-Byte)" : " (High-Byte)");
+                case "MD": return "FC3 · " + mwReg(2 * n - 1) + "+" + mwReg(2 * n);
+                case "ND": return "FC3 · " + (2000 + 2 * n - 1) + "+" + (2000 + 2 * n);
+                case "IA": case "QA": {
+                    var fc = t === "IA" ? "FC4 · " : "FC3 · ";
+                    if (fw === "240") { var b = t === "IA" ? 42000 : 40000; return fc + (b + 2 * n - 1) + "+" + (b + 2 * n); }
+                    if (fw === "140") { var c = t === "IA" ? 6500 : 6000; return fc + (c + 2 * n - 1) + "+" + (c + 2 * n); }
+                    return fc + n;
+                }
+            }
+            return "?";
+        }
+        function fwOf(node) {
+            var id = $("#node-input-device").length ? $("#node-input-device").val() : node.device;
+            var d = id && RED.nodes.node(id);
+            return d && d.firmware ? d.firmware : "240";
+        }
+
+        window.easyE4Mb = {
+            regText: regText,
+            shortLabel: function (n) {
+                var m = n.mode || "operand";
+                if (m === "operand") return (n.opType || "MW") + (n.index || "?");
+                if (m === "range") return (n.opType || "MW") + (n.index || "?") + "–" + (n.opType || "MW") + (n.rangeEnd || "?");
+                if (m === "clock") return "CLOCK";
+                if (m === "raw") return "FC" + (n.fc || "?") + ":" + (n.addr || "?");
+                var s = String(n.list || "").split(/\n/).join(" ").trim();
+                return s.length > 25 ? s.slice(0, 22) + "..." : s;
+            },
+            vIndex: function (v) {
+                var m = val("#node-input-mode", this, "mode") || "operand";
+                if (m !== "operand" && m !== "range") return true;
+                var t = val("#node-input-opType", this, "opType") || "MW";
+                return intOk(v, 1, maxIndex(t, "240"));
+            },
+            vRangeEnd: function (v) {
+                var m = val("#node-input-mode", this, "mode") || "operand";
+                if (m !== "range") return true;
+                var t = val("#node-input-opType", this, "opType") || "MW";
+                var a = parseInt(val("#node-input-index", this, "index"), 10);
+                return intOk(v, 1, maxIndex(t, "240")) && parseInt(v, 10) >= a;
+            },
+            vList: function (v) {
+                var m = val("#node-input-mode", this, "mode") || "operand";
+                return m !== "list" || String(v || "").trim().length > 0;
+            },
+            vAddr: function (v) {
+                var m = val("#node-input-mode", this, "mode") || "operand";
+                return m !== "raw" || intOk(v, 1, 65536);
+            },
+            vCount: function (v) {
+                var m = val("#node-input-mode", this, "mode") || "operand";
+                if (m !== "raw") return true;
+                var fc = val("#node-input-fc", this, "fc");
+                return intOk(v, 1, fc === "1" || fc === "2" ? 512 : 125);
+            },
+            // Felder je nach Auswahl ein-/ausblenden und Register-Vorschau zeigen
+            bind: function (node, isWrite) {
+                function update() {
+                    var m = $("#node-input-mode").val();
+                    var t = $("#node-input-opType").val();
+                    var fw = fwOf(node);
+                    $(".e4m-op").toggle(m === "operand" || m === "range");
+                    $(".e4m-end").toggle(m === "range");
+                    $(".e4m-list").toggle(m === "list");
+                    $(".e4m-raw").toggle(m === "raw");
+                    $(".e4m-count").toggle(m === "raw" && !isWrite);
+                    $(".e4m-poll").toggle(m !== "msg");
+                    var txt = "–";
+                    if (m === "operand") txt = regText(t, $("#node-input-index").val(), fw);
+                    if (m === "range") txt = regText(t, $("#node-input-index").val(), fw) + "  …  " + regText(t, $("#node-input-rangeEnd").val(), fw);
+                    if (m === "clock") txt = isWrite ? "FC16 · 5000–5005" : "FC3 · 5000–5005";
+                    if (m === "raw") txt = "FC" + $("#node-input-fc").val() + " · " + ($("#node-input-addr").val() || "?") +
+                        (isWrite ? "" : " ×" + ($("#node-input-count").val() || 1));
+                    if (isWrite && m === "operand") {
+                        if (t === "M" || t === "N") txt = txt.replace("FC1", "FC5");
+                        else if (t === "MD" || t === "ND") txt = txt.replace("FC3", "FC16");
+                        else if (t === "MB" || t === "NB") txt = txt.replace("FC3", "FC3+FC6");
+                        else txt = txt.replace("FC3", "FC6");
+                    }
+                    $("#e4m-preview").text(txt);
+                    $("#node-input-index, #node-input-rangeEnd, #node-input-list, #node-input-addr, #node-input-count").trigger("validate");
+                }
+                $("#node-input-mode, #node-input-opType, #node-input-fc, #node-input-device").on("change", update);
+                $("#node-input-index, #node-input-rangeEnd, #node-input-list, #node-input-addr, #node-input-count").on("input change", update);
+                update();
+            },
+        };
+    })();
+</script>
+
+<!-- ===================== Steuerung (Konfiguration) ===================== -->
+<script type="text/javascript">
+    RED.nodes.registerType("easye4mb-device", {
+        category: "config",
+        defaults: {
+            name: { value: "" },
+            host: { value: "", required: true },
+            port: { value: 502, validate: function (v) { return /^\d+$/.test(String(v)) && +v > 0 && +v < 65536; } },
+            unitId: { value: 1, validate: function (v) { return /^\d+$/.test(String(v)) && +v <= 255; } },
+            firmware: { value: "240" },
+            addressing: { value: "direct" },
+            timeout: { value: 2000, validate: function (v) { return /^\d+$/.test(String(v)) && +v >= 200 && +v <= 30000; } },
+            gap: { value: 20, validate: function (v) { return v === undefined || v === "" || (/^\d+$/.test(String(v)) && +v <= 5000); } },
+        },
+        label: function () {
+            return this.name || ("easyE4 " + (this.host || "Modbus"));
+        },
+        paletteLabel: "easyE4 Modbus",
+        oneditprepare: function () {
+            var node = this;
+            // Einträge aus älteren Fassungen haben noch keine Adressierung
+            if (!$("#node-config-input-addressing").val()) $("#node-config-input-addressing").val("direct");
+            $("#e4m-test").on("click", function (ev) {
+                ev.preventDefault();
+                var $r = $("#e4m-test-result");
+                $r.css("color", "").text(node._("easye4mb.test.running"));
+                var body = {
+                    host: $("#node-config-input-host").val(),
+                    port: $("#node-config-input-port").val(),
+                    unitId: $("#node-config-input-unitId").val(),
+                    firmware: $("#node-config-input-firmware").val(),
+                    addressing: $("#node-config-input-addressing").val(),
+                    timeout: $("#node-config-input-timeout").val(),
+                    lang: RED.i18n.lang(),
+                };
+                $.ajax({
+                    url: "easye4mb/test",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(body),
+                    success: function (res) {
+                        if (res.suggest) $("#node-config-input-addressing").val(res.suggest);
+                        $r.css("color", res.ok ? (res.warn ? "#c80" : "#3a3") : "#c33").text(res.text);
+                    },
+                    error: function (xhr) {
+                        $r.css("color", "#c33").text(node._("easye4mb.test.failed") + ": " + (xhr.responseText || xhr.status));
+                    },
+                });
+            });
+        },
+    });
+</script>
+
+<script type="text/html" data-template-name="easye4mb-device">
+    <div class="form-row">
+        <label for="node-config-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+        <input type="text" id="node-config-input-name" placeholder="easyE4" />
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-host"><i class="fa fa-globe"></i> <span data-i18n="easye4mb.label.host"></span></label>
+        <input type="text" id="node-config-input-host" data-i18n="[placeholder]easye4mb.placeholder.host" />
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-port"><i class="fa fa-plug"></i> <span data-i18n="easye4mb.label.port"></span></label>
+        <input type="text" id="node-config-input-port" style="width:80px" placeholder="502" />
+        <span style="margin-left:12px" data-i18n="easye4mb.label.unitId"></span>
+        <input type="text" id="node-config-input-unitId" style="width:60px; margin-left:6px" placeholder="1" />
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-firmware"><i class="fa fa-microchip"></i> <span data-i18n="easye4mb.label.firmware"></span></label>
+        <select id="node-config-input-firmware" style="width:70%">
+            <option value="240" data-i18n="easye4mb.firmware.240"></option>
+            <option value="140" data-i18n="easye4mb.firmware.140"></option>
+            <option value="old" data-i18n="easye4mb.firmware.old"></option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-addressing"><i class="fa fa-sort-numeric-asc"></i> <span data-i18n="easye4mb.label.addressing"></span></label>
+        <select id="node-config-input-addressing" style="width:70%">
+            <option value="direct" data-i18n="easye4mb.addressing.direct"></option>
+            <option value="minus1" data-i18n="easye4mb.addressing.minus1"></option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-timeout"><i class="fa fa-clock-o"></i> <span data-i18n="easye4mb.label.timeout"></span></label>
+        <input type="text" id="node-config-input-timeout" style="width:80px" /> ms
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-gap"><i class="fa fa-pause"></i> <span data-i18n="easye4mb.label.gap"></span></label>
+        <input type="text" id="node-config-input-gap" style="width:80px" placeholder="20" /> ms
+        <span style="margin-left:6px; color:#888" data-i18n="easye4mb.label.gapHint"></span>
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <button type="button" class="red-ui-button" id="e4m-test"><i class="fa fa-plug"></i> <span data-i18n="easye4mb.test.button"></span></button>
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <span id="e4m-test-result" style="display:inline-block; width:65%"></span>
+    </div>
+    <div class="form-tips" data-i18n="[html]easye4mb.tips.device"></div>
+</script>
+
+
+<!-- ===================== easyE4 Modbus lesen ===================== -->
+<script type="text/javascript">
+    RED.nodes.registerType("easye4mb-read", {
+        category: "easyE4",
+        color: "#a6bbcf",
+        defaults: {
+            name: { value: "" },
+            device: { type: "easye4mb-device", required: true },
+            mode: { value: "operand" },
+            opType: { value: "MW" },
+            index: { value: 1, validate: easyE4Mb.vIndex },
+            rangeEnd: { value: 8, validate: easyE4Mb.vRangeEnd },
+            list: { value: "", validate: easyE4Mb.vList },
+            fc: { value: "3" },
+            addr: { value: 1001, validate: easyE4Mb.vAddr },
+            count: { value: 1, validate: easyE4Mb.vCount },
+            interval: { value: 1, validate: function (v) { var s = String(v === undefined ? "" : v).trim().replace(",", "."); return /^\d+(\.\d+)?$/.test(s) && (+s === 0 || +s >= 0.1); } },
+            onlyChange: { value: false },
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "font-awesome/fa-sign-in",
+        label: function () {
+            if (this.name) return this.name;
+            if (this.mode === "msg") return this._("easye4mb.read.label");
+            return this._("easye4mb.read.label") + ": " + easyE4Mb.shortLabel(this);
+        },
+        paletteLabel: function () { return this._("easye4mb.read.paletteLabel"); },
+        inputLabels: function () { return this._("easye4mb.read.input"); },
+        outputLabels: function () { return this._("easye4mb.read.output"); },
+        oneditprepare: function () { easyE4Mb.bind(this, false); },
+    });
+</script>
+
+<script type="text/html" data-template-name="easye4mb-read">
+    <div class="form-row">
+        <label for="node-input-device"><i class="fa fa-microchip"></i> <span data-i18n="easye4mb.label.device"></span></label>
+        <input type="text" id="node-input-device" />
+    </div>
+    <div class="form-row">
+        <label for="node-input-mode"><i class="fa fa-list"></i> <span data-i18n="easye4mb.label.mode"></span></label>
+        <select id="node-input-mode" style="width:70%">
+            <option value="operand" data-i18n="easye4mb.mode.operand"></option>
+            <option value="range" data-i18n="easye4mb.mode.range"></option>
+            <option value="list" data-i18n="easye4mb.mode.list"></option>
+            <option value="clock" data-i18n="easye4mb.mode.clock"></option>
+            <option value="raw" data-i18n="easye4mb.mode.raw"></option>
+            <option value="msg" data-i18n="easye4mb.mode.msg"></option>
+        </select>
+    </div>
+    <div class="form-row e4m-op">
+        <label for="node-input-opType"><i class="fa fa-crosshairs"></i> <span data-i18n="easye4mb.label.operand"></span></label>
+        <select id="node-input-opType" style="width:70%">
+            <option value="I" data-i18n="easye4mb.op.I"></option>
+            <option value="Q" data-i18n="easye4mb.op.Q"></option>
+            <option value="IA" data-i18n="easye4mb.op.IA"></option>
+            <option value="QA" data-i18n="easye4mb.op.QA"></option>
+            <option value="ID" data-i18n="easye4mb.op.ID"></option>
+            <option value="M" data-i18n="easye4mb.op.M"></option>
+            <option value="MB" data-i18n="easye4mb.op.MB"></option>
+            <option value="MW" data-i18n="easye4mb.op.MW"></option>
+            <option value="MD" data-i18n="easye4mb.op.MD"></option>
+            <option value="N" data-i18n="easye4mb.op.N"></option>
+            <option value="NB" data-i18n="easye4mb.op.NB"></option>
+            <option value="NW" data-i18n="easye4mb.op.NW"></option>
+            <option value="ND" data-i18n="easye4mb.op.ND"></option>
+        </select>
+    </div>
+    <div class="form-row e4m-op">
+        <label for="node-input-index"><i class="fa fa-hashtag"></i> <span data-i18n="easye4mb.label.index"></span></label>
+        <input type="number" id="node-input-index" min="1" step="1" style="width:80px" />
+        <span class="e4m-end" style="margin:0 6px" data-i18n="easye4mb.label.rangeEnd"></span>
+        <input class="e4m-end" type="number" id="node-input-rangeEnd" min="1" step="1" style="width:80px" />
+    </div>
+    <div class="form-row e4m-list">
+        <label for="node-input-list"><i class="fa fa-list-ul"></i> <span data-i18n="easye4mb.label.list"></span></label>
+        <textarea id="node-input-list" rows="3" style="width:70%" data-i18n="[placeholder]easye4mb.placeholder.list"></textarea>
+    </div>
+    <div class="form-row e4m-raw">
+        <label for="node-input-fc"><i class="fa fa-code"></i> <span data-i18n="easye4mb.label.fc"></span></label>
+        <select id="node-input-fc" style="width:70%">
+            <option value="1" data-i18n="easye4mb.fc.1"></option>
+            <option value="2" data-i18n="easye4mb.fc.2"></option>
+            <option value="3" data-i18n="easye4mb.fc.3"></option>
+            <option value="4" data-i18n="easye4mb.fc.4"></option>
+        </select>
+    </div>
+    <div class="form-row e4m-raw">
+        <label for="node-input-addr"><i class="fa fa-hashtag"></i> <span data-i18n="easye4mb.label.addr"></span></label>
+        <input type="number" id="node-input-addr" min="1" max="65536" step="1" style="width:90px" />
+        <span class="e4m-count" style="margin:0 6px" data-i18n="easye4mb.label.count"></span>
+        <input class="e4m-count" type="number" id="node-input-count" min="1" step="1" style="width:70px" />
+    </div>
+    <div class="form-row">
+        <label><i class="fa fa-eye"></i> <span data-i18n="easye4mb.label.register"></span></label>
+        <code id="e4m-preview"></code>
+    </div>
+    <div class="form-row e4m-poll">
+        <label for="node-input-interval"><i class="fa fa-repeat"></i> <span data-i18n="easye4mb.label.interval"></span></label>
+        <input type="text" id="node-input-interval" style="width:60px" />
+        <span style="margin-left:6px" data-i18n="easye4mb.label.seconds"></span>
+    </div>
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-onlyChange" style="display:inline-block; width:auto; vertical-align:top;" />
+        <label for="node-input-onlyChange" style="width:auto"> <span data-i18n="easye4mb.label.onlyChange"></span></label>
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name" />
+    </div>
+    <div class="form-tips" data-i18n="[html]easye4mb.tips.read"></div>
+</script>
+
+
+<!-- ===================== easyE4 Modbus schreiben ===================== -->
+<script type="text/javascript">
+    RED.nodes.registerType("easye4mb-write", {
+        category: "easyE4",
+        color: "#a6bbcf",
+        align: "right",
+        defaults: {
+            name: { value: "" },
+            device: { type: "easye4mb-device", required: true },
+            mode: { value: "operand" },
+            opType: { value: "MW" },
+            index: { value: 1, validate: easyE4Mb.vIndex },
+            fc: { value: "6" },
+            addr: { value: 1001, validate: easyE4Mb.vAddr },
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "font-awesome/fa-sign-out",
+        label: function () {
+            if (this.name) return this.name;
+            if (this.mode === "msg") return this._("easye4mb.write.label");
+            return this._("easye4mb.write.label") + ": " + easyE4Mb.shortLabel(this);
+        },
+        paletteLabel: function () { return this._("easye4mb.write.paletteLabel"); },
+        inputLabels: function () { return this._("easye4mb.write.input"); },
+        outputLabels: function () { return this._("easye4mb.write.output"); },
+        oneditprepare: function () { easyE4Mb.bind(this, true); },
+    });
+</script>
+
+<script type="text/html" data-template-name="easye4mb-write">
+    <div class="form-row">
+        <label for="node-input-device"><i class="fa fa-microchip"></i> <span data-i18n="easye4mb.label.device"></span></label>
+        <input type="text" id="node-input-device" />
+    </div>
+    <div class="form-row">
+        <label for="node-input-mode"><i class="fa fa-list"></i> <span data-i18n="easye4mb.label.writeMode"></span></label>
+        <select id="node-input-mode" style="width:70%">
+            <option value="operand" data-i18n="easye4mb.writeMode.operand"></option>
+            <option value="clock" data-i18n="easye4mb.writeMode.clock"></option>
+            <option value="raw" data-i18n="easye4mb.writeMode.raw"></option>
+            <option value="msg" data-i18n="easye4mb.writeMode.msg"></option>
+        </select>
+    </div>
+    <div class="form-row e4m-op">
+        <label for="node-input-opType"><i class="fa fa-crosshairs"></i> <span data-i18n="easye4mb.label.operand"></span></label>
+        <select id="node-input-opType" style="width:70%">
+            <option value="M" data-i18n="easye4mb.op.M"></option>
+            <option value="MB" data-i18n="easye4mb.op.MB"></option>
+            <option value="MW" data-i18n="easye4mb.op.MW"></option>
+            <option value="MD" data-i18n="easye4mb.op.MD"></option>
+            <option value="N" data-i18n="easye4mb.op.N"></option>
+            <option value="NB" data-i18n="easye4mb.op.NB"></option>
+            <option value="NW" data-i18n="easye4mb.op.NW"></option>
+            <option value="ND" data-i18n="easye4mb.op.ND"></option>
+        </select>
+    </div>
+    <div class="form-row e4m-op">
+        <label for="node-input-index"><i class="fa fa-hashtag"></i> <span data-i18n="easye4mb.label.index"></span></label>
+        <input type="number" id="node-input-index" min="1" step="1" style="width:80px" />
+    </div>
+    <div class="form-row e4m-raw">
+        <label for="node-input-fc"><i class="fa fa-code"></i> <span data-i18n="easye4mb.label.fc"></span></label>
+        <select id="node-input-fc" style="width:70%">
+            <option value="5" data-i18n="easye4mb.fc.5"></option>
+            <option value="6" data-i18n="easye4mb.fc.6"></option>
+            <option value="16" data-i18n="easye4mb.fc.16"></option>
+        </select>
+    </div>
+    <div class="form-row e4m-raw">
+        <label for="node-input-addr"><i class="fa fa-hashtag"></i> <span data-i18n="easye4mb.label.addr"></span></label>
+        <input type="number" id="node-input-addr" min="1" max="65536" step="1" style="width:90px" />
+    </div>
+    <div class="form-row">
+        <label><i class="fa fa-eye"></i> <span data-i18n="easye4mb.label.register"></span></label>
+        <code id="e4m-preview"></code>
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name" />
+    </div>
+    <div class="form-tips" data-i18n="[html]easye4mb.tips.write"></div>
+</script>

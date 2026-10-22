@@ -1,0 +1,45 @@
+{
+  "name": "node-red-contrib-easye4-modbus",
+  "version": "1.0.1",
+  "description": "Node-RED nodes for the Eaton easyE4 via Modbus TCP: read/write inputs, outputs, markers, NET markers, analog values and the clock – no extra dependencies (English/Deutsch)",
+  "keywords": [
+    "node-red",
+    "eaton",
+    "easye4",
+    "easy",
+    "modbus",
+    "modbus-tcp",
+    "plc",
+    "sps",
+    "steuerung"
+  ],
+  "author": "R. Cieslewicz",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cieslera/node-red-contrib-easye4-modbus.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cieslera/node-red-contrib-easye4-modbus/issues"
+  },
+  "homepage": "https://github.com/cieslera/node-red-contrib-easye4-modbus#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "files": [
+    "easye4mb.js",
+    "easye4mb.html",
+    "lib/",
+    "locales/",
+    "examples/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "node-red": {
+    "version": ">=3.0.0",
+    "nodes": {
+      "easye4mb": "easye4mb.js"
+    }
+  }
+}

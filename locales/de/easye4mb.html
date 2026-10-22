@@ -1,0 +1,121 @@
+<script type="text/html" data-help-name="easye4mb-device">
+    <p>Eine easyE4, angesprochen über <b>Modbus TCP</b> (die easyE4 ist dabei Modbus-TCP-Server).
+        Die Knoten <i>easyE4 Modbus lesen</i> und <i>schreiben</i> verweisen auf diesen Eintrag.
+        Alle Anfragen an dieselbe Adresse laufen nacheinander über <b>eine</b> Verbindung – die easyE4 bedient
+        höchstens zwei Modbus-TCP-Clients gleichzeitig.</p>
+    <h3>Einstellungen</h3>
+    <dl class="message-properties">
+        <dt>Adresse</dt><dd>IP-Adresse oder Name der easyE4, z. B. <code>192.168.178.50</code>.</dd>
+        <dt>Port</dt><dd>Standard <code>502</code>. Ab Firmware 2.30 in easySoft änderbar (<i>Modbus TCP ServerPort</i>).</dd>
+        <dt>Unit-ID</dt><dd>Normalerweise <code>1</code>. Kommt keine Antwort (Zeitüberschreitung), obwohl die Adresse stimmt, testweise <code>0</code> oder <code>255</code> eintragen.</dd>
+        <dt>Firmware</dt><dd>Bestimmt, welche Register genutzt werden:
+            <ul>
+                <li><b>2.40 oder neuer</b>: M bis 1024, MW bis 1022, MD bis 511, Analogwerte 32 Bit (IA bis 512, QA bis 128).</li>
+                <li><b>1.40 bis 2.3x</b>: M bis 512, MW bis 512, Analogwerte 32 Bit (bis 48).</li>
+                <li><b>älter als 1.40</b>: Analogwerte 16 Bit (bis 48).</li>
+            </ul></dd>
+        <dt>Adressierung</dt><dd><b>Register-Nr. direkt</b> (Standard): Im Telegramm steht die Register-Nr. aus der
+            Eaton-Tabelle, z. B. 1001 für MW1 – so arbeitet die easyE4 tatsächlich. <b>Register-Nr. − 1</b> nur, falls ein
+            Gerät sich an die Angabe „1 kleiner“ aus der Eaton-Doku hält. Woran man eine falsche Einstellung erkennt: MW1,
+            I1, Q1 und die Uhr melden „nicht freigegeben“, und alle anderen Werte liegen ein Register daneben.
+            <b>Verbindung testen</b> erkennt das und stellt die Adressierung selbst um.</dd>
+        <dt>Zeitlimit</dt><dd>So lange wird auf eine Antwort gewartet (Standard 2000 ms).</dd>
+        <dt>Pause</dt><dd>Mindestabstand zwischen zwei Anfragen (Standard 20 ms). Die easyE4 schafft höchstens
+            200 Anfragen pro Sekunde, meist deutlich weniger.</dd>
+    </dl>
+    <p>Mit <b>Verbindung testen</b> liest der Dialog die Uhr der easyE4 (oder MW1), ohne dass du vorher übernehmen musst.</p>
+    <h3>Einstellungen in easySoft 8</h3>
+    <p><i>Ansicht Projekt → Register Modbus-Server</i>:</p>
+    <ul>
+        <li><b>Modbus TCP Server aktiv</b> anhaken.</li>
+        <li><b>Freigabe Merker</b>: Bereich der Merkerworte (z. B. MW1 bis MW512). Merker-Bits, -Bytes und
+            -Doppelworte gehören zu diesen Worten (M1–M16 = MW1, MB1/MB2 = MW1, MD1 = MW1+MW2).</li>
+        <li><b>Freigabe NET-Merker</b>: Bereich der NET-Merkerworte (nur die eigenen, nicht die anderer Teilnehmer).</li>
+        <li><b>Freigabe E/As und Uhrendaten lesen</b>: nötig für I, Q, IA, QA, ID und die Uhr.</li>
+        <li><b>Uhr stellen gesperrt</b> (ab FW 1.30) und <b>Merker, Net-Merker nur lesend</b> (ab FW 2.30) verhindern das Schreiben.</li>
+    </ul>
+    <p>Danach das Programm übertragen. Nicht freigegebene Adressen beantwortet die easyE4 mit einer Fehlermeldung
+        (Exception 2) – der Knoten zeigt dann „nicht freigegeben“.</p>
+    <h3>Schutz vor Überlastung</h3>
+    <ul>
+        <li>Immer nur <b>eine Anfrage gleichzeitig</b> je easyE4, dazwischen mindestens die eingestellte <i>Pause</i>.</li>
+        <li>Ist die easyE4 nicht erreichbar, wird immer seltener nachgefragt (1 s, 2 s, 4 s … höchstens 10 s).</li>
+        <li>Viele Schreibbefehle für denselben Operanden kurz hintereinander (z. B. Schieberegler): nur der neueste wird gesendet.</li>
+        <li>Eine ruhende Verbindung wird nach 30 s geschlossen und bei Bedarf neu aufgebaut.</li>
+    </ul>
+    <h3>Haftungsausschluss</h3>
+    <p>Inoffizielles Projekt, nicht von Eaton. Benutzung auf eigene Gefahr, ohne jegliche Haftung. Details: <code>LICENSE</code> (MIT).</p>
+</script>
+
+<script type="text/html" data-help-name="easye4mb-read">
+    <p>Liest Werte aus der easyE4 über Modbus TCP: alle <i>x</i> Sekunden und/oder bei jeder eingehenden Nachricht.</p>
+    <h3>Was lesen</h3>
+    <dl class="message-properties">
+        <dt>Einen Operanden</dt><dd>Typ und Nummer, z. B. <code>MW</code> <code>3</code>. Unter <i>Register</i> zeigt der
+            Dialog, welches Modbus-Register dafür abgefragt wird.</dd>
+        <dt>Bereich</dt><dd>z. B. <code>MW1</code> bis <code>MW8</code> → <code>{MW1: …, …, MW8: …}</code>.</dd>
+        <dt>Mehrere (Liste)</dt><dd>Beliebig gemischt, getrennt durch Komma, z. B.
+            <code>I1-I8, Q1-Q4, M1, MW3, MD6, IA1, CLOCK</code>. Zusammenhängende Werte werden mit einer Anfrage geholt.</dd>
+        <dt>Uhr der easyE4</dt><dd>Datum und Uhrzeit (Register 5000–5005).</dd>
+        <dt>Register frei</dt><dd>Für Fachleute: Funktionscode (FC1–FC4), Register-Nr. wie in der Eaton-Tabelle
+            „Modbus TCP Map“ (1-basiert) und Anzahl. Ausgabe als Zahl bzw. Feld.</dd>
+        <dt>Aus der Nachricht</dt><dd>Eine Liste wie oben als Text in <code>msg.topic</code> oder <code>msg.payload</code>.</dd>
+    </dl>
+    <h3>Operanden</h3>
+    <ul>
+        <li><code>I</code> Eingänge, <code>Q</code> Ausgänge, <code>ID</code> Diagnosebits, <code>IA</code>/<code>QA</code>
+            Analogwerte (auch <code>AI</code>/<code>AO</code>) – nur lesbar, und nur mit <i>Freigabe E/As</i>.</li>
+        <li><code>M</code>, <code>MB</code>, <code>MW</code>, <code>MD</code> Merker; <code>N</code>, <code>NB</code>,
+            <code>NW</code>, <code>ND</code> NET-Merker des eigenen Geräts.</li>
+        <li><code>MD</code>/<code>ND</code> und 32-Bit-Analogwerte mit Vorzeichen, <code>MW</code> 0…65535,
+            <code>MB</code> 0…255, 16-Bit-Analogwerte mit Vorzeichen.</li>
+    </ul>
+    <h3>Ausgang</h3>
+    <dl class="message-properties">
+        <dt>payload</dt><dd>Bei einem Wert die Zahl (Bits als 0/1), sonst ein Objekt <code>{I1: 1, MW3: 42}</code>.
+            Die Uhr als <code>{year, month, day, hour, minute, second}</code>.</dd>
+        <dt>topic</dt><dd>Name des Operanden, z. B. <code>MW3</code> (bei mehreren: <code>I1+MW3</code>).</dd>
+        <dt>date</dt><dd>Nur bei der Uhr: dieselbe Zeit als JavaScript-Datum.</dd>
+        <dt>errors</dt><dd>Nur wenn einzelne Werte einer Liste nicht gelesen werden konnten (z. B. nicht freigegeben):
+            <code>[{key, code, text}]</code>. Die übrigen Werte stehen trotzdem in <code>payload</code>.</dd>
+    </dl>
+    <h3>Hinweise</h3>
+    <ul>
+        <li>Kürzestes Abfrageintervall 0,1 s. Mit <i>Nur bei Änderung</i> kommt nur dann eine Nachricht, wenn sich ein Wert geändert hat.</li>
+        <li>Ein Knoten fragt erst wieder an, wenn seine vorige Antwort da ist.</li>
+    </ul>
+</script>
+
+<script type="text/html" data-help-name="easye4mb-write">
+    <p>Schreibt Werte in die easyE4 über Modbus TCP.</p>
+    <h3>Was schreiben</h3>
+    <dl class="message-properties">
+        <dt>Einen Operanden</dt><dd>Typ und Nummer fest einstellen; der Wert kommt aus <code>msg.payload</code>.
+            Bits: <code>true</code>/<code>false</code>, <code>1</code>/<code>0</code>, <code>"ein"</code>/<code>"aus"</code>.</dd>
+        <dt>Uhr stellen</dt><dd>Stellt Datum und Uhrzeit (ab Firmware 1.21). <code>msg.payload</code>: leer oder
+            <code>"now"</code> = Uhrzeit von Node-RED, sonst ein Datum, ein Zeitstempel in ms, ein Text wie
+            <code>"2026-10-22T12:00:00"</code> oder <code>{year, month, day, hour, minute, second}</code>.</dd>
+        <dt>Register frei</dt><dd>Für Fachleute: FC5 (ein Bit), FC6 (ein Wort) oder FC16 (mehrere Worte, Feld in
+            <code>msg.payload</code>) an eine Register-Nr. laut Eaton-Tabelle.</dd>
+        <dt>Aus der Nachricht</dt><dd><code>msg.payload</code> als Objekt, z. B. <code>{"MW3": 5, "M1": true, "MD6": 100000}</code>,
+            oder <code>msg.topic</code> = Operand und <code>msg.payload</code> = Wert. Mit dem Schlüssel <code>CLOCK</code>
+            wird die Uhr gestellt.</dd>
+    </dl>
+    <h3>Schreibbar</h3>
+    <ul>
+        <li><code>M</code> (FC5), <code>MW</code> (FC6), <code>MD</code> (FC16, beide Worte auf einmal),
+            <code>MB</code> (Merkerwort lesen, Byte ersetzen, Wort schreiben), ebenso <code>N</code>, <code>NB</code>,
+            <code>NW</code>, <code>ND</code> des eigenen Geräts.</li>
+        <li>Ein- und Ausgänge (I, Q, IA, QA) sind über Modbus nicht beschreibbar.</li>
+        <li>Wertebereiche: MB 0…255, MW 0…65535 (auch −32768…−1), MD −2147483648…4294967295.</li>
+        <li>Lehnt die easyE4 FC5 ab, wird das Bit über das zugehörige Merkerwort geschrieben.</li>
+        <li>Bei <code>MB</code> und diesem Ersatzweg kann ein Wert verloren gehen, wenn das Programm der easyE4 im selben
+            Moment das andere Byte bzw. Bit desselben Wortes ändert. Für schnelle Werte besser ganze Worte verwenden.</li>
+    </ul>
+    <h3>Ausgang</h3>
+    <dl class="message-properties">
+        <dt>success</dt><dd><code>true</code>, wenn alles geschrieben wurde.</dd>
+        <dt>results</dt><dd><code>[{target, value, ok}]</code>.</dd>
+    </dl>
+    <p>Fehler (z. B. nicht freigegeben, „nur lesend“) erscheinen am Knoten und können mit einem <i>catch</i>-Knoten abgefangen werden.</p>
+</script>

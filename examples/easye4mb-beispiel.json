@@ -1,0 +1,1074 @@
+[
+  {
+    "id": "t",
+    "type": "tab",
+    "label": "easyE4 Modbus Beispiel",
+    "info": "Beispiel für node-red-contrib-easye4-modbus – alle Funktionen.\n\n1. In easySoft 8: Ansicht Projekt → Register Modbus-Server → *Modbus TCP Server aktiv*, Merker MW1 bis MW16 freigeben, *Freigabe E/As und Uhrendaten lesen* anhaken, Programm übertragen.\n2. Doppelklick auf einen easyE4-Knoten, beim Feld *easyE4* auf den Stift klicken, IP-Adresse und Firmware eintragen, *Verbindung testen*, *Aktualisieren*.\n3. *Übernahme (deploy)*, dann die Inject-Knoten (Kästchen links) anklicken. Ergebnisse im Debug-Fenster.\n\nPassendes easyE4-Programm (ST): easye4mb-beispiel.st im Paketordner examples.\n\nAchtung: Das Schreiben wirkt auf die echte Steuerung!"
+  },
+  {
+    "id": "dev",
+    "type": "easye4mb-device",
+    "name": "easyE4",
+    "host": "",
+    "port": 502,
+    "unitId": 1,
+    "firmware": "240",
+    "addressing": "direct",
+    "timeout": 2000,
+    "gap": 20
+  },
+  {
+    "id": "c1",
+    "type": "comment",
+    "z": "t",
+    "name": "1) Lesen – automatisch (Abfrageintervall 1 s, nur bei Änderung)",
+    "info": "",
+    "x": 230,
+    "y": 40,
+    "wires": []
+  },
+  {
+    "id": "r1",
+    "type": "easye4mb-read",
+    "z": "t",
+    "name": "Lebenszeichen MW3",
+    "device": "dev",
+    "mode": "operand",
+    "opType": "MW",
+    "index": 3,
+    "rangeEnd": 8,
+    "list": "",
+    "fc": "3",
+    "addr": 1001,
+    "count": 1,
+    "interval": 1,
+    "onlyChange": true,
+    "x": 450,
+    "y": 80,
+    "wires": [
+      [
+        "r1d"
+      ]
+    ]
+  },
+  {
+    "id": "r1d",
+    "type": "debug",
+    "z": "t",
+    "name": "MW3",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": true,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "payload",
+    "statusType": "auto",
+    "x": 760,
+    "y": 80,
+    "wires": []
+  },
+  {
+    "id": "r2",
+    "type": "easye4mb-read",
+    "z": "t",
+    "name": "Übersicht (Liste)",
+    "device": "dev",
+    "mode": "list",
+    "opType": "MW",
+    "index": 1,
+    "rangeEnd": 8,
+    "list": "I1-I8, Q1-Q4, M1, M4, MB3, MW5, MW7, MD6, MD7",
+    "fc": "3",
+    "addr": 1001,
+    "count": 1,
+    "interval": 1,
+    "onlyChange": true,
+    "x": 450,
+    "y": 130,
+    "wires": [
+      [
+        "r2d"
+      ]
+    ]
+  },
+  {
+    "id": "r2d",
+    "type": "debug",
+    "z": "t",
+    "name": "Übersicht",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": true,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "payload",
+    "statusType": "auto",
+    "x": 760,
+    "y": 130,
+    "wires": []
+  },
+  {
+    "id": "c2",
+    "type": "comment",
+    "z": "t",
+    "name": "2) Lesen – auf Knopfdruck (Inject)",
+    "info": "",
+    "x": 230,
+    "y": 190,
+    "wires": []
+  },
+  {
+    "id": "ri0",
+    "type": "inject",
+    "z": "t",
+    "name": "Bereich MW3–MW10",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 170,
+    "y": 230,
+    "wires": [
+      [
+        "ri0n"
+      ]
+    ]
+  },
+  {
+    "id": "ri0n",
+    "type": "easye4mb-read",
+    "z": "t",
+    "name": "",
+    "device": "dev",
+    "mode": "range",
+    "opType": "MW",
+    "index": 3,
+    "rangeEnd": 10,
+    "list": "",
+    "fc": "3",
+    "addr": 1001,
+    "count": 1,
+    "interval": 0,
+    "onlyChange": false,
+    "x": 450,
+    "y": 230,
+    "wires": [
+      [
+        "ri0nd"
+      ]
+    ]
+  },
+  {
+    "id": "ri0nd",
+    "type": "debug",
+    "z": "t",
+    "name": "Bereich MW3–MW10",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": true,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "payload",
+    "statusType": "auto",
+    "x": 760,
+    "y": 230,
+    "wires": []
+  },
+  {
+    "id": "ri1",
+    "type": "inject",
+    "z": "t",
+    "name": "Eingänge I1–I8",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 170,
+    "y": 275,
+    "wires": [
+      [
+        "ri1n"
+      ]
+    ]
+  },
+  {
+    "id": "ri1n",
+    "type": "easye4mb-read",
+    "z": "t",
+    "name": "",
+    "device": "dev",
+    "mode": "range",
+    "opType": "I",
+    "index": 1,
+    "rangeEnd": 8,
+    "list": "",
+    "fc": "3",
+    "addr": 1001,
+    "count": 1,
+    "interval": 0,
+    "onlyChange": false,
+    "x": 450,
+    "y": 275,
+    "wires": [
+      [
+        "ri1nd"
+      ]
+    ]
+  },
+  {
+    "id": "ri1nd",
+    "type": "debug",
+    "z": "t",
+    "name": "Eingänge I1–I8",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": true,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "payload",
+    "statusType": "auto",
+    "x": 760,
+    "y": 275,
+    "wires": []
+  },
+  {
+    "id": "ri2",
+    "type": "inject",
+    "z": "t",
+    "name": "Analogeingänge IA1–IA4",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 170,
+    "y": 320,
+    "wires": [
+      [
+        "ri2n"
+      ]
+    ]
+  },
+  {
+    "id": "ri2n",
+    "type": "easye4mb-read",
+    "z": "t",
+    "name": "",
+    "device": "dev",
+    "mode": "range",
+    "opType": "IA",
+    "index": 1,
+    "rangeEnd": 4,
+    "list": "",
+    "fc": "3",
+    "addr": 1001,
+    "count": 1,
+    "interval": 0,
+    "onlyChange": false,
+    "x": 450,
+    "y": 320,
+    "wires": [
+      [
+        "ri2nd"
+      ]
+    ]
+  },
+  {
+    "id": "ri2nd",
+    "type": "debug",
+    "z": "t",
+    "name": "Analogeingänge IA1–IA4",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": true,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "payload",
+    "statusType": "auto",
+    "x": 760,
+    "y": 320,
+    "wires": []
+  },
+  {
+    "id": "ri3",
+    "type": "inject",
+    "z": "t",
+    "name": "Diagnose ID1–ID16",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 170,
+    "y": 365,
+    "wires": [
+      [
+        "ri3n"
+      ]
+    ]
+  },
+  {
+    "id": "ri3n",
+    "type": "easye4mb-read",
+    "z": "t",
+    "name": "",
+    "device": "dev",
+    "mode": "range",
+    "opType": "ID",
+    "index": 1,
+    "rangeEnd": 16,
+    "list": "",
+    "fc": "3",
+    "addr": 1001,
+    "count": 1,
+    "interval": 0,
+    "onlyChange": false,
+    "x": 450,
+    "y": 365,
+    "wires": [
+      [
+        "ri3nd"
+      ]
+    ]
+  },
+  {
+    "id": "ri3nd",
+    "type": "debug",
+    "z": "t",
+    "name": "Diagnose ID1–ID16",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": true,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "payload",
+    "statusType": "auto",
+    "x": 760,
+    "y": 365,
+    "wires": []
+  },
+  {
+    "id": "ri4",
+    "type": "inject",
+    "z": "t",
+    "name": "Uhr der easyE4",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 170,
+    "y": 410,
+    "wires": [
+      [
+        "ri4n"
+      ]
+    ]
+  },
+  {
+    "id": "ri4n",
+    "type": "easye4mb-read",
+    "z": "t",
+    "name": "",
+    "device": "dev",
+    "mode": "clock",
+    "opType": "MW",
+    "index": 1,
+    "rangeEnd": 8,
+    "list": "",
+    "fc": "3",
+    "addr": 1001,
+    "count": 1,
+    "interval": 0,
+    "onlyChange": false,
+    "x": 450,
+    "y": 410,
+    "wires": [
+      [
+        "ri4nd"
+      ]
+    ]
+  },
+  {
+    "id": "ri4nd",
+    "type": "debug",
+    "z": "t",
+    "name": "Uhr der easyE4",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": true,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "payload",
+    "statusType": "auto",
+    "x": 760,
+    "y": 410,
+    "wires": []
+  },
+  {
+    "id": "ri5",
+    "type": "inject",
+    "z": "t",
+    "name": "Register frei: FC3 1001 ×16",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 170,
+    "y": 455,
+    "wires": [
+      [
+        "ri5n"
+      ]
+    ]
+  },
+  {
+    "id": "ri5n",
+    "type": "easye4mb-read",
+    "z": "t",
+    "name": "",
+    "device": "dev",
+    "mode": "raw",
+    "opType": "MW",
+    "index": 1,
+    "rangeEnd": 8,
+    "list": "",
+    "fc": "3",
+    "addr": 1001,
+    "count": 16,
+    "interval": 0,
+    "onlyChange": false,
+    "x": 450,
+    "y": 455,
+    "wires": [
+      [
+        "ri5nd"
+      ]
+    ]
+  },
+  {
+    "id": "ri5nd",
+    "type": "debug",
+    "z": "t",
+    "name": "Register frei: FC3 1001 ×16",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": true,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "payload",
+    "statusType": "auto",
+    "x": 760,
+    "y": 455,
+    "wires": []
+  },
+  {
+    "id": "rm",
+    "type": "inject",
+    "z": "t",
+    "name": "msg.topic = \"MB3, MD6, MD7, Q1-Q4\"",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "MB3, MD6, MD7, Q1-Q4",
+    "payload": "",
+    "payloadType": "date",
+    "x": 170,
+    "y": 500,
+    "wires": [
+      [
+        "rmn"
+      ]
+    ]
+  },
+  {
+    "id": "rmn",
+    "type": "easye4mb-read",
+    "z": "t",
+    "name": "",
+    "device": "dev",
+    "mode": "msg",
+    "opType": "MW",
+    "index": 1,
+    "rangeEnd": 8,
+    "list": "",
+    "fc": "3",
+    "addr": 1001,
+    "count": 1,
+    "interval": 0,
+    "onlyChange": false,
+    "x": 450,
+    "y": 500,
+    "wires": [
+      [
+        "rmnd"
+      ]
+    ]
+  },
+  {
+    "id": "rmnd",
+    "type": "debug",
+    "z": "t",
+    "name": "aus msg.topic",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": true,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "payload",
+    "statusType": "auto",
+    "x": 760,
+    "y": 500,
+    "wires": []
+  },
+  {
+    "id": "c3",
+    "type": "comment",
+    "z": "t",
+    "name": "3) Schreiben (Merker müssen in easySoft freigegeben sein)",
+    "info": "",
+    "x": 230,
+    "y": 565,
+    "wires": []
+  },
+  {
+    "id": "w0",
+    "type": "inject",
+    "z": "t",
+    "name": "Fern-Ein M1 = true",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "true",
+    "payloadType": "bool",
+    "x": 170,
+    "y": 605,
+    "wires": [
+      [
+        "w0n"
+      ]
+    ]
+  },
+  {
+    "id": "w0n",
+    "type": "easye4mb-write",
+    "z": "t",
+    "name": "",
+    "device": "dev",
+    "mode": "operand",
+    "opType": "M",
+    "index": 1,
+    "fc": "6",
+    "addr": 1001,
+    "x": 450,
+    "y": 605,
+    "wires": [
+      [
+        "dbgW"
+      ]
+    ]
+  },
+  {
+    "id": "w1",
+    "type": "inject",
+    "z": "t",
+    "name": "Fern-Ein M1 = false",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "false",
+    "payloadType": "bool",
+    "x": 170,
+    "y": 650,
+    "wires": [
+      [
+        "w0n"
+      ]
+    ]
+  },
+  {
+    "id": "w2",
+    "type": "inject",
+    "z": "t",
+    "name": "Zähler-Reset M2 (Impuls)",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "true",
+    "payloadType": "bool",
+    "x": 170,
+    "y": 695,
+    "wires": [
+      [
+        "w2n"
+      ]
+    ]
+  },
+  {
+    "id": "w2n",
+    "type": "easye4mb-write",
+    "z": "t",
+    "name": "",
+    "device": "dev",
+    "mode": "operand",
+    "opType": "M",
+    "index": 2,
+    "fc": "6",
+    "addr": 1001,
+    "x": 450,
+    "y": 695,
+    "wires": [
+      [
+        "dbgW"
+      ]
+    ]
+  },
+  {
+    "id": "w3",
+    "type": "inject",
+    "z": "t",
+    "name": "Grenzwert MW5 = 3",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "3",
+    "payloadType": "num",
+    "x": 170,
+    "y": 740,
+    "wires": [
+      [
+        "w3n"
+      ]
+    ]
+  },
+  {
+    "id": "w3n",
+    "type": "easye4mb-write",
+    "z": "t",
+    "name": "",
+    "device": "dev",
+    "mode": "operand",
+    "opType": "MW",
+    "index": 5,
+    "fc": "6",
+    "addr": 1001,
+    "x": 450,
+    "y": 740,
+    "wires": [
+      [
+        "dbgW"
+      ]
+    ]
+  },
+  {
+    "id": "w4",
+    "type": "inject",
+    "z": "t",
+    "name": "Testwert MW6 = 1234",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "1234",
+    "payloadType": "num",
+    "x": 170,
+    "y": 785,
+    "wires": [
+      [
+        "w4n"
+      ]
+    ]
+  },
+  {
+    "id": "w4n",
+    "type": "easye4mb-write",
+    "z": "t",
+    "name": "",
+    "device": "dev",
+    "mode": "operand",
+    "opType": "MW",
+    "index": 6,
+    "fc": "6",
+    "addr": 1001,
+    "x": 450,
+    "y": 785,
+    "wires": [
+      [
+        "dbgW"
+      ]
+    ]
+  },
+  {
+    "id": "w5",
+    "type": "inject",
+    "z": "t",
+    "name": "Testbyte MB4 = 200",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "200",
+    "payloadType": "num",
+    "x": 170,
+    "y": 830,
+    "wires": [
+      [
+        "w5n"
+      ]
+    ]
+  },
+  {
+    "id": "w5n",
+    "type": "easye4mb-write",
+    "z": "t",
+    "name": "",
+    "device": "dev",
+    "mode": "operand",
+    "opType": "MB",
+    "index": 4,
+    "fc": "6",
+    "addr": 1001,
+    "x": 450,
+    "y": 830,
+    "wires": [
+      [
+        "dbgW"
+      ]
+    ]
+  },
+  {
+    "id": "w6",
+    "type": "inject",
+    "z": "t",
+    "name": "MD8 = 100000",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "100000",
+    "payloadType": "num",
+    "x": 170,
+    "y": 875,
+    "wires": [
+      [
+        "w6n"
+      ]
+    ]
+  },
+  {
+    "id": "w6n",
+    "type": "easye4mb-write",
+    "z": "t",
+    "name": "",
+    "device": "dev",
+    "mode": "operand",
+    "opType": "MD",
+    "index": 8,
+    "fc": "6",
+    "addr": 1001,
+    "x": 450,
+    "y": 875,
+    "wires": [
+      [
+        "dbgW"
+      ]
+    ]
+  },
+  {
+    "id": "wm",
+    "type": "inject",
+    "z": "t",
+    "name": "mehrere auf einmal",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "{\"MW6\":21,\"MB4\":7,\"MD8\":-1}",
+    "payloadType": "json",
+    "x": 170,
+    "y": 920,
+    "wires": [
+      [
+        "wmn"
+      ]
+    ]
+  },
+  {
+    "id": "wmn",
+    "type": "easye4mb-write",
+    "z": "t",
+    "name": "",
+    "device": "dev",
+    "mode": "msg",
+    "opType": "MW",
+    "index": 1,
+    "fc": "6",
+    "addr": 1001,
+    "x": 450,
+    "y": 920,
+    "wires": [
+      [
+        "dbgW"
+      ]
+    ]
+  },
+  {
+    "id": "wc0",
+    "type": "inject",
+    "z": "t",
+    "name": "Uhr = Node-RED-Zeit",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 170,
+    "y": 965,
+    "wires": [
+      [
+        "wc0n"
+      ]
+    ]
+  },
+  {
+    "id": "wc0n",
+    "type": "easye4mb-write",
+    "z": "t",
+    "name": "",
+    "device": "dev",
+    "mode": "clock",
+    "opType": "MW",
+    "index": 1,
+    "fc": "6",
+    "addr": 1001,
+    "x": 450,
+    "y": 965,
+    "wires": [
+      [
+        "dbgW"
+      ]
+    ]
+  },
+  {
+    "id": "wc1",
+    "type": "inject",
+    "z": "t",
+    "name": "Uhr = 24.12.2026 12:00",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "2026-12-24T12:00:00",
+    "payloadType": "str",
+    "x": 170,
+    "y": 1010,
+    "wires": [
+      [
+        "wc1n"
+      ]
+    ]
+  },
+  {
+    "id": "wc1n",
+    "type": "easye4mb-write",
+    "z": "t",
+    "name": "",
+    "device": "dev",
+    "mode": "clock",
+    "opType": "MW",
+    "index": 1,
+    "fc": "6",
+    "addr": 1001,
+    "x": 450,
+    "y": 1010,
+    "wires": [
+      [
+        "dbgW"
+      ]
+    ]
+  },
+  {
+    "id": "dbgW",
+    "type": "debug",
+    "z": "t",
+    "name": "Schreiben",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "true",
+    "targetType": "full",
+    "x": 760,
+    "y": 795,
+    "wires": []
+  },
+  {
+    "id": "c4",
+    "type": "comment",
+    "z": "t",
+    "name": "Fehler abfangen",
+    "info": "",
+    "x": 230,
+    "y": 1075,
+    "wires": []
+  },
+  {
+    "id": "ct",
+    "type": "catch",
+    "z": "t",
+    "name": "",
+    "scope": null,
+    "uncaught": false,
+    "x": 130,
+    "y": 1115,
+    "wires": [
+      [
+        "dbgE"
+      ]
+    ]
+  },
+  {
+    "id": "dbgE",
+    "type": "debug",
+    "z": "t",
+    "name": "Fehler",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "error",
+    "targetType": "msg",
+    "x": 450,
+    "y": 1115,
+    "wires": []
+  }
+]

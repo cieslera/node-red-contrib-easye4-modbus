@@ -1,0 +1,148 @@
+{
+    "easye4mb": {
+        "label": {
+            "host": "Adresse",
+            "port": "Port",
+            "unitId": "Unit-ID",
+            "firmware": "Firmware",
+            "timeout": "Zeitlimit",
+            "gap": "Pause",
+            "gapHint": "zwischen Anfragen",
+            "device": "easyE4",
+            "mode": "Was lesen",
+            "writeMode": "Was schreiben",
+            "operand": "Operand",
+            "index": "Nummer",
+            "rangeEnd": "bis",
+            "list": "Operanden",
+            "fc": "Funktionscode",
+            "addr": "Register-Nr.",
+            "count": "Anzahl",
+            "register": "Register",
+            "interval": "Abfragen alle",
+            "seconds": "Sekunden (0 = nur bei Nachricht)",
+            "onlyChange": "Nur bei Änderung ausgeben",
+            "addressing": "Adressierung"
+        },
+        "placeholder": {
+            "host": "z. B. 192.168.178.50",
+            "list": "z. B. I1-I8, Q1-Q4, M1, MW3, MD6, IA1, CLOCK"
+        },
+        "firmware": {
+            "240": "2.40 oder neuer",
+            "140": "1.40 bis 2.3x",
+            "old": "älter als 1.40"
+        },
+        "mode": {
+            "operand": "Einen Operanden",
+            "range": "Bereich",
+            "list": "Mehrere (Liste)",
+            "clock": "Uhr der easyE4",
+            "raw": "Register frei (Funktionscode + Nr.)",
+            "msg": "Aus der Nachricht (msg.topic / msg.payload)"
+        },
+        "writeMode": {
+            "operand": "Einen Operanden",
+            "clock": "Uhr stellen",
+            "raw": "Register frei (Funktionscode + Nr.)",
+            "msg": "Aus der Nachricht (msg.payload als Objekt oder msg.topic)"
+        },
+        "op": {
+            "I": "I – Bit-Eingang",
+            "Q": "Q – Bit-Ausgang",
+            "IA": "IA – Analogeingang",
+            "QA": "QA – Analogausgang",
+            "ID": "ID – Diagnosebit",
+            "M": "M – Merker-Bit",
+            "MB": "MB – Merker-Byte",
+            "MW": "MW – Merker-Wort",
+            "MD": "MD – Merker-Doppelwort",
+            "N": "N – NET-Merker-Bit (eigenes Gerät)",
+            "NB": "NB – NET-Merker-Byte (eigenes Gerät)",
+            "NW": "NW – NET-Merker-Wort (eigenes Gerät)",
+            "ND": "ND – NET-Merker-Doppelwort (eigenes Gerät)"
+        },
+        "fc": {
+            "1": "FC1 – Coils lesen",
+            "2": "FC2 – Discrete Inputs lesen",
+            "3": "FC3 – Holding Register lesen",
+            "4": "FC4 – Input Register lesen",
+            "5": "FC5 – ein Coil schreiben",
+            "6": "FC6 – ein Register schreiben",
+            "16": "FC16 – mehrere Register schreiben"
+        },
+        "read": {
+            "paletteLabel": "easyE4 Modbus lesen",
+            "label": "Modbus lesen",
+            "input": "Auslöser",
+            "output": "Wert(e)"
+        },
+        "write": {
+            "paletteLabel": "easyE4 Modbus schreiben",
+            "label": "Modbus schreiben",
+            "input": "Wert",
+            "output": "Ergebnis"
+        },
+        "status": {
+            "unknown": "noch keine Verbindung",
+            "online": "verbunden",
+            "offline": "easyE4 nicht erreichbar",
+            "values": "__n__ Werte",
+            "written": "__n__ geschrieben",
+            "clockSet": "Uhr gestellt"
+        },
+        "test": {
+            "button": "Verbindung testen",
+            "running": "Teste …",
+            "failed": "Test fehlgeschlagen",
+            "okClock": "Verbindung OK – Uhr der easyE4: __clock__",
+            "okMw": "Verbindung OK – MW1 = __value__ (Uhrendaten sind in easySoft nicht freigegeben)",
+            "okNoData": "Verbindung OK – die easyE4 antwortet, aber weder Uhrendaten noch MW1 sind freigegeben (easySoft: Register Modbus-Server)",
+            "switched": "– Adressierung wurde auf „__mode__“ umgestellt, bitte Aktualisieren klicken."
+        },
+        "exception": {
+            "1": "Funktion von der easyE4 nicht unterstützt",
+            "2": "Adresse nicht vorhanden oder in easySoft nicht freigegeben (Register Modbus-Server)",
+            "2w": "Schreiben nicht möglich: Adresse nicht freigegeben, „nur lesend“ oder „Uhr stellen gesperrt“ (easySoft: Register Modbus-Server)",
+            "3": "Ungültiger Wert oder ungültige Anzahl",
+            "4": "Fehler in der easyE4",
+            "6": "easyE4 ist beschäftigt",
+            "other": "Modbus-Fehler __code__"
+        },
+        "errors": {
+            "noDevice": "Keine easyE4 ausgewählt",
+            "noHost": "Keine Adresse der easyE4 eingetragen",
+            "badPort": "Ungültiger Port",
+            "network": "easyE4 __host__ nicht erreichbar (__msg__)",
+            "closed": "Verbindung wurde beendet",
+            "queueFull": "Zu viele wartende Anfragen – Abfrageintervall vergrößern",
+            "unknownType": "Unbekannter Operand „__type__“",
+            "indexRange": "__what__: Nummer muss zwischen 1 und __max__ liegen",
+            "indexRangeFw": "__what__: mit der eingestellten Firmware nur bis __max__ (mehr ab Firmware 2.40)",
+            "rangeOrder": "Bereich: das Ende muss größer oder gleich dem Anfang sein",
+            "rangeTooLong": "Bereich zu groß (höchstens __max__ Operanden)",
+            "badOperand": "„__text__“ ist kein gültiger Operand (Beispiele: MW3, Q1, IA2, M1-M16, CLOCK)",
+            "noOperands": "Keine Operanden angegeben",
+            "noElementInMsg": "Keine Operanden in msg.topic oder msg.payload (z. B. \"MW3, Q1\")",
+            "noValue": "keine Antwort für diesen Wert",
+            "badBool": "„__value__“ ist kein Bit-Wert (true/false, 1/0, ein/aus)",
+            "badNumber": "__what__: „__value__“ muss eine ganze Zahl von __min__ bis __max__ sein",
+            "notWritable": "__type__ kann über Modbus nicht geschrieben werden (nur M, MB, MW, MD, N, NB, NW, ND)",
+            "badDate": "„__value__“ ist kein gültiges Datum",
+            "badFc": "Funktionscode __fc__ ist hier nicht möglich",
+            "badAddr": "Register-Nr. muss zwischen 1 und 65536 liegen",
+            "badCount": "Anzahl muss zwischen 1 und __max__ liegen",
+            "payloadMissing": "msg.payload fehlt",
+            "noWriteTarget": "Was soll geschrieben werden? msg.payload als Objekt (z. B. {\"MW3\": 5}) oder msg.topic mit Operand"
+        },
+        "tips": {
+            "device": "In easySoft 8: <i>Ansicht Projekt → Register Modbus-Server</i> → <b>Modbus TCP Server aktiv</b>, Merker-/NET-Merker-Bereich freigeben, für Ein-/Ausgänge und Uhr <b>Freigabe E/As und Uhrendaten lesen</b>. Port 502 (ab Firmware 2.30 einstellbar).",
+            "read": "Bits kommen als 0/1, Worte als Zahl. Mehrere Werte am besten mit <i>Mehrere (Liste)</i> lesen – sie werden mit möglichst wenigen Anfragen geholt.",
+            "write": "Schreibbar sind nur Merker und eigene NET-Merker (M, MB, MW, MD, N, NB, NW, ND) sowie die Uhr. Ein- und Ausgänge sind über Modbus nicht beschreibbar."
+        },
+        "addressing": {
+            "direct": "Register-Nr. direkt (Standard)",
+            "minus1": "Register-Nr. − 1"
+        }
+    }
+}
