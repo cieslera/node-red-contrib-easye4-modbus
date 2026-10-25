@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-easye4-modbus",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Node-RED nodes for the Eaton easyE4 via Modbus TCP: read/write inputs, outputs, markers, NET markers, analog values and the clock – no extra dependencies (English/Deutsch)",
   "keywords": [
     "node-red",

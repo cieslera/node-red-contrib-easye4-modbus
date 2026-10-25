@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.2
+
+- Fix: after the easyE4 dropped the connection, reconnecting could hang forever if the old connection's "close"
+  arrived after the new attempt had started and that attempt failed (e.g. device not reachable) – all further
+  requests then stayed unanswered. Each connection attempt now only handles itself. New automatic test for this case.
+  / Korrektur: Brach die easyE4 die Verbindung ab, konnte das Neuverbinden für immer hängen bleiben, wenn das „close“
+  der alten Verbindung erst nach Beginn des neuen Versuchs kam und dieser scheiterte (z. B. Gerät nicht erreichbar) –
+  alle weiteren Anfragen blieben dann unbeantwortet. Jeder Verbindungsversuch kümmert sich jetzt nur um sich selbst.
+  Neuer automatischer Test für diesen Fall.
+
 ## 1.0.1
 
 - First public version. Config node with *Test connection*, read node (operand, range, list, clock, free registers,
