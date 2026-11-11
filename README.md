@@ -151,5 +151,5 @@ Bitte über [GitHub Issues](https://github.com/cieslera/node-red-contrib-easye4-
 
 ## License / Lizenz
 
-MIT – see / siehe [LICENSE](LICENSE). Source of the register map: Eaton online documentation easyE4 (v900),
+MIT – see / siehe [LICENSE](LICENSE). Safety and liability notice / Sicherheits- und Haftungshinweis: [HINWEIS.md](HINWEIS.md). Source of the register map: Eaton online documentation easyE4 (v900),
 "Modbus TCP Map" and "easyE4 als Modbus TCP Server".

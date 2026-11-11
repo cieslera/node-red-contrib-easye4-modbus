@@ -34,6 +34,7 @@
     "examples/",
     "README.md",
     "LICENSE",
+    "HINWEIS.md",
     "CHANGELOG.md"
   ],
   "node-red": {
