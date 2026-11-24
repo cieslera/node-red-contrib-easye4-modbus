@@ -1,6 +1,6 @@
 # node-red-contrib-easye4-modbus
 
-**[English](#english) | [Deutsch](#deutsch)**
+**[English](#english) | [Deutsch](#deutsch) | [Disclaimer / Haftungsausschluss](#disclaimer--haftungsausschluss)**
 
 Node-RED nodes for the **Eaton easyE4** via **Modbus TCP** (the easyE4 is the Modbus TCP server).
 Read inputs, outputs, markers, NET markers, analog values, diagnostic bits and the clock; write markers and the clock.
@@ -17,18 +17,6 @@ Register-Nummern sucht das Paket selbst aus Eatons „Modbus TCP Map“ heraus.
 Außerdem gibt es [node-red-contrib-easye4-mqtt](https://flows.nodered.org/node/node-red-contrib-easye4-mqtt) (MQTT, Firmware ab 2.40)
 und [node-red-contrib-easye4-json](https://flows.nodered.org/node/node-red-contrib-easye4-json) (JSON-API des Webservers).
 Alle drei Pakete können gleichzeitig installiert sein.
-
-> **⚠ Use at your own risk / Benutzung auf eigene Gefahr**
->
-> This software controls real machines (writing operands, setting the clock).
-> It is provided "as is" under the MIT license, **without any warranty and without any liability** for damage
-> to persons, machines, installations or data. Never let safety functions depend on it.
-> Unofficial project, not affiliated with or endorsed by Eaton.
->
-> Diese Software steuert reale Maschinen (Operanden schreiben, Uhr stellen).
-> Sie wird unter der MIT-Lizenz „wie besehen“ bereitgestellt, **ohne Gewährleistung und ohne jegliche Haftung**
-> für Schäden an Personen, Maschinen, Anlagen oder Daten. Sicherheitsfunktionen dürfen nie davon abhängen.
-> Inoffizielles Projekt, nicht von Eaton.
 
 ---
 
@@ -149,7 +137,19 @@ steht – an einem echten Gerät geprüft. Die andere Variante ist im Konfigurat
 
 Bitte über [GitHub Issues](https://github.com/cieslera/node-red-contrib-easye4-modbus/issues) melden.
 
+## Disclaimer / Haftungsausschluss
+
+This software controls real machines (writing operands, setting the clock).
+It is provided "as is" under the MIT license, **without any warranty and without any liability** for damage
+to persons, machines, installations or data. Never let safety functions depend on it.
+Unofficial project, not affiliated with or endorsed by Eaton.
+
+Diese Software steuert reale Maschinen (Operanden schreiben, Uhr stellen).
+Sie wird unter der MIT-Lizenz „wie besehen“ bereitgestellt, **ohne Gewährleistung und ohne jegliche Haftung**
+für Schäden an Personen, Maschinen, Anlagen oder Daten. Sicherheitsfunktionen dürfen nie davon abhängen.
+Inoffizielles Projekt, nicht von Eaton.
+
 ## License / Lizenz
 
-MIT – see / siehe [LICENSE](LICENSE). Safety and liability notice / Sicherheits- und Haftungshinweis: [HINWEIS.md](HINWEIS.md). Source of the register map: Eaton online documentation easyE4 (v900),
+MIT – see / siehe [LICENSE](LICENSE). Source of the register map: Eaton online documentation easyE4 (v900),
 "Modbus TCP Map" and "easyE4 als Modbus TCP Server".

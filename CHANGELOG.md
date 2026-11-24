@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.3
+
+- README: disclaimer moved from the top to the end of the page (content unchanged, still linked at the top). No functional changes.
+  / README: Haftungsausschluss vom Seitenanfang ans Ende verschoben (Inhalt unverändert, oben weiterhin verlinkt). Keine Änderung an der Funktion.
+
 ## 1.0.2
 
 - Fix: after the easyE4 dropped the connection, reconnecting could hang forever if the old connection's "close"
